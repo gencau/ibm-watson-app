@@ -1,6 +1,9 @@
 import React from "react";
 
-const TextBox = ({value, transriptionReceived}) => {
+const TextBox = ({value, setValue}) => {
+    const handleInputchabnge = (event) => {
+        setValue(event.target.value);
+    }
     return (
         <div>
             <div>
@@ -9,8 +12,12 @@ const TextBox = ({value, transriptionReceived}) => {
                           name="phrase" 
                           className="db border-box hover-black w-100 measure ba b--black-20 pa2 br2 mb2" 
                           aria-describedby="phrase-desc" 
-                          placeholder="Transcription will appear here..."></textarea>
-                <small id="phrase-desc" className="f6 black-60">Transcibed text will appear here. To modify the transcription, just edit the text field.</small>
+                          placeholder="Transcription will appear here..."
+                          value={value === "" ? "": value}
+                          onChange={handleInputchabnge}></textarea>
+                <small id="phrase-desc" className="f6 black-60">
+                    Transcribed text will appear here. To modify the transcription, just edit the text field. 
+                </small>
             </div>
         </div>
     );

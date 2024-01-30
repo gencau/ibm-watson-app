@@ -11,57 +11,51 @@ const Panel1 = () => {
     const [isTranscribing, setTranscribing] = useState(false);
     const [transcriptionText, setTranscription] = useState("");
 
-    function setTranscriptionText(text) {
-        setTranscription(text);
-    }
-
     function toggleRecording () {
-        setRecording(!isRecording);
-
-        if (isRecording)
+        if (isRecording === false) {
             onStartRecording();
-
-        if (!isRecording)
+            setRecording(true);
+        }
+        else {
             onStopRecording();
+            setRecording(false);
+        }
     }
 
     const onStopRecording = () => {
-        setTranscription("");
+        setTranscribing(false);
+        console.log("Stopping recording");
     }
 
     const onStartRecording = () => {
-        fetch('api/token')
+        setTranscribing(true);
+        setTranscription("");
+
+        console.log("Starting recording");
+        fetch('http://localhost:3001/recognize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'audio/wav'
+            },
+        })
             .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 return response.text();
             })
-            .then((token) => {
-                console.log(token);
-                let stream = recognizeMic({
-                    token:token,
-                    objectMode: true,
-                    extractResults: true,
-                    format: false
-                });
-
-                stream.on('data', (data) => {
-                    this.setState({
-                        text: data.alternatives[0].transcript
-                    })
-                    
-                    console.log(data.alternatives[0].transcript)
-                });
-                stream.on('error', function(err) {
-                    console.log(err);
-                });
+            .then((transcription) => {
+                console.log("Transcription: " + transcription);
+                setTranscription(transcription);
             })
-            .catch(function(err) {
-                console.log(err);
-            })
+            .catch((error) => {
+                console.error('There has been a problem with your fetch operation:', error);
+            });
     }
 
     return(
         <div className="tc bg-light-blue br3 pa3 ma2 dib bw2 shadow-5">
-            <TextBox value={transcriptionText}/>
+            <TextBox value={transcriptionText} setValue={setTranscription}/>
             <Microphone setRecording={toggleRecording} isRecording={isRecording}/>
         </div>
     );
