@@ -8,7 +8,6 @@ import recognizeMicrophone from 'watson-speech/speech-to-text/recognize-micropho
 
 const Panel1 = () => {
     const [isRecording, setRecording] = useState(false);
-    const [isTranscribing, setTranscribing] = useState(false);
     const [transcriptionText, setTranscription] = useState("");
     const [partialTranscription, setPartialTranscription] =  useState("");
     const streamRef = useRef(null);
@@ -25,7 +24,6 @@ const Panel1 = () => {
     }
 
     const onStopRecording = () => {
-        setTranscribing(false);
         setRecording(false);
         if (streamRef.current)
             streamRef.current.stop();
@@ -34,7 +32,6 @@ const Panel1 = () => {
     }
 
     const onStartRecording = async () => {
-        setTranscribing(true);
         setTranscription("");
         setPartialTranscription("");
 
