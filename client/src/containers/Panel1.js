@@ -10,6 +10,7 @@ const Panel1 = () => {
     const [isRecording, setRecording] = useState(false);
     const [isTranscribing, setTranscribing] = useState(false);
     const [transcriptionText, setTranscription] = useState("");
+    const [partialTranscription, setPartialTranscription] =  useState("");
     const streamRef = useRef(null);
     let modelName = "en-US_BroadbandModel";
 
@@ -25,6 +26,7 @@ const Panel1 = () => {
 
     const onStopRecording = () => {
         setTranscribing(false);
+        setRecording(false);
         if (streamRef.current)
             streamRef.current.stop();
             streamRef.current = null;
@@ -34,6 +36,7 @@ const Panel1 = () => {
     const onStartRecording = async () => {
         setTranscribing(true);
         setTranscription("");
+        setPartialTranscription("");
 
         console.log("Starting recording");
 
@@ -59,7 +62,14 @@ const Panel1 = () => {
                 });
 
                 streamRef.current.on('data', (data) => {
-                    setTranscription(data.alternatives[0].transcript);
+                    if (data.final) {
+                        setTranscription((prevTranscription) => `${prevTranscription}${data.alternatives[0].transcript}`);
+                        setPartialTranscription("");
+                    }
+                    else {
+                        setPartialTranscription(data.alternatives[0].transcript);
+                    }
+
                 });
 
                 streamRef.current.on('error', (err) => {
@@ -75,7 +85,7 @@ const Panel1 = () => {
 
     return(
         <div className="tc bg-light-blue br3 pa3 ma2 dib bw2 shadow-5">
-            <TextBox value={transcriptionText} setValue={setTranscription} isEditable={!isRecording}/>
+            <TextBox value={`${transcriptionText}${partialTranscription}`} setValue={setTranscription} isEditable={!isRecording}/>
             <Microphone setRecording={toggleRecording} isRecording={isRecording}/>
         </div>
     );
