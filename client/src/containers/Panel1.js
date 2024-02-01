@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import TextBox from '../components/TextBox'
 import Microphone from '../components/Microphone'
 
@@ -10,24 +10,24 @@ const Panel1 = () => {
     const [isRecording, setRecording] = useState(false);
     const [isTranscribing, setTranscribing] = useState(false);
     const [transcriptionText, setTranscription] = useState("");
-    let stream = null;
+    const streamRef = useRef(null);
     let modelName = "en-US_BroadbandModel";
 
     function toggleRecording () {
-        if (isRecording === false) {
+        if (!isRecording) {
             onStartRecording();
-            setRecording(true);
         }
         else {
             onStopRecording();
-            setRecording(false);
         }
+        setRecording(!isRecording);
     }
 
     const onStopRecording = () => {
         setTranscribing(false);
-        if (stream !== null)
-            stream.stop();
+        if (streamRef.current)
+            streamRef.current.stop();
+            streamRef.current = null;
         console.log("Stopping recording");
     }
 
@@ -43,7 +43,7 @@ const Panel1 = () => {
             })
             .then((token) => {
                 const { accessToken, url } = JSON.parse(token);
-                stream = recognizeMicrophone({
+                streamRef.current = recognizeMicrophone({
                     accessToken: accessToken, // use accessToken, even if only token is accepted: otherwise it won't work
                     url: url,
                     objectMode: true, // enables formatted text
@@ -58,12 +58,13 @@ const Panel1 = () => {
                     keepMicrophone: true,
                 });
 
-                stream.on('data', (data) => {
+                streamRef.current.on('data', (data) => {
                     setTranscription(data.alternatives[0].transcript);
                 });
 
-                stream.on('error', (err) => {
+                streamRef.current.on('error', (err) => {
                     console.log(err);
+                    onStopRecording();
                 });
 
             })
@@ -74,7 +75,7 @@ const Panel1 = () => {
 
     return(
         <div className="tc bg-light-blue br3 pa3 ma2 dib bw2 shadow-5">
-            <TextBox value={transcriptionText} setValue={setTranscription}/>
+            <TextBox value={transcriptionText} setValue={setTranscription} isEditable={!isRecording}/>
             <Microphone setRecording={toggleRecording} isRecording={isRecording}/>
         </div>
     );

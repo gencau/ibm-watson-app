@@ -1,6 +1,6 @@
 import React from "react";
 
-const TextBox = ({value, setValue}) => {
+const TextBox = ({value, setValue, isEditable}) => {
     const handleInputchabnge = (event) => {
         setValue(event.target.value);
     }
@@ -14,7 +14,8 @@ const TextBox = ({value, setValue}) => {
                           aria-describedby="phrase-desc" 
                           placeholder="Transcription will appear here..."
                           value={value === "" ? "": value}
-                          onChange={handleInputchabnge}></textarea>
+                          onChange={handleInputchabnge}
+                          readOnly={!isEditable}></textarea>
                 <small id="phrase-desc" className="f6 black-60">
                     Transcribed text will appear here. To modify the transcription, just edit the text field. 
                 </small>
