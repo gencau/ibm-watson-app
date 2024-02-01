@@ -18,20 +18,23 @@ const speechToText = new SpeechToTextV1({
   }
 });
 
-const getToken = (req, res) => {
-    speechToText.getToken(function (err, token) {
-        if (!token) {
-            console.log('error:', err);
-        } else {
-            res.send(token);
-        }
-    });
+const getToken = async (req, res) => {
+    let tokenManager = speechToText.authenticator.tokenManager;
+    try {
+        const accessToken = await tokenManager.getToken();
+        res.json({accessToken: accessToken, url: serviceUrl});
+      } 
+      catch (err) {
+        console.log('Error: ', err);
+        res.status(500).send(err);
+      }
 }
 
 function onEvent(name, event) {
     console.log(name, JSON.stringify(event, null, 2));
 }
 
+// Not used right now...
 const handleRecognitionRequest = (req, res) => {
     console.log('Handling recognition request');
     console.log("API key", apiKey);

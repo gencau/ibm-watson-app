@@ -3,13 +3,15 @@ import { useState } from 'react'
 import TextBox from '../components/TextBox'
 import Microphone from '../components/Microphone'
 
-import recognizeMic from 'watson-speech/speech-to-text/recognize-microphone';
+import recognizeMicrophone from 'watson-speech/speech-to-text/recognize-microphone';
 
 
 const Panel1 = () => {
     const [isRecording, setRecording] = useState(false);
     const [isTranscribing, setTranscribing] = useState(false);
     const [transcriptionText, setTranscription] = useState("");
+    let stream = null;
+    let modelName = "en-US_BroadbandModel";
 
     function toggleRecording () {
         if (isRecording === false) {
@@ -24,32 +26,49 @@ const Panel1 = () => {
 
     const onStopRecording = () => {
         setTranscribing(false);
+        if (stream !== null)
+            stream.stop();
         console.log("Stopping recording");
     }
 
-    const onStartRecording = () => {
+    const onStartRecording = async () => {
         setTranscribing(true);
         setTranscription("");
 
         console.log("Starting recording");
-        fetch('http://localhost:3001/recognize', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'audio/wav'
-            },
-        })
+
+        await fetch('http://localhost:3001/api/token')
             .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
                 return response.text();
             })
-            .then((transcription) => {
-                console.log("Transcription: " + transcription);
-                setTranscription(transcription);
+            .then((token) => {
+                const { accessToken, url } = JSON.parse(token);
+                stream = recognizeMicrophone({
+                    accessToken: accessToken, // use accessToken, even if only token is accepted: otherwise it won't work
+                    url: url,
+                    objectMode: true, // enables formatted text
+                    extractResults: true, // simplifies the response
+                    format: false, // adds capitals, periods, and a few other things (requires extractResults: true)
+                    keywords: undefined,
+                    keywordsThreshold: undefined,
+                    model: modelName,
+                    realtime: true,
+                    resultsBySpeaker: false,
+                    timestamps: true,
+                    keepMicrophone: true,
+                });
+
+                stream.on('data', (data) => {
+                    setTranscription(data.alternatives[0].transcript);
+                });
+
+                stream.on('error', (err) => {
+                    console.log(err);
+                });
+
             })
-            .catch((error) => {
-                console.error('There has been a problem with your fetch operation:', error);
+            .catch(error => {
+                console.error('Error fetching the token', error);
             });
     }
 
