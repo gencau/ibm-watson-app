@@ -44,7 +44,7 @@ const Panel1 = () => {
             .then((token) => {
                 const { accessToken, url } = JSON.parse(token);
                 streamRef.current = recognizeMicrophone({
-                    accessToken: accessToken, // use accessToken, even if only token is accepted: otherwise it won't work
+                    accessToken: accessToken, // use accessToken, even if token is also accepted: otherwise it won't work
                     url: url,
                     objectMode: true, // enables formatted text
                     extractResults: true, // simplifies the response
